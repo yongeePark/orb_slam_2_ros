@@ -102,6 +102,7 @@ tf2::Transform Node::TransformToTarget (tf2::Transform tf_in, std::string frame_
   try {
     // Get the transform from camera to target
     geometry_msgs::TransformStamped tf_msg = tfBuffer->lookupTransform(frame_in, frame_target, ros::Time(0));
+    // geometry_msgs::TransformStamped tf_msg = tfBuffer->lookupTransform(frame_in, frame_target, ros::Time::now());
     // Convert to tf2
     tf2::fromMsg(tf_msg, transformStamped_temp);
     tf_orig2target.setBasis(transformStamped_temp.getBasis());
@@ -175,6 +176,11 @@ void Node::PublishPositionAsPoseStamped (cv::Mat position) {
   tf_position_target_stamped = tf2::Stamped<tf2::Transform>(tf_position_target, current_frame_time_, map_frame_id_param_);
   geometry_msgs::PoseStamped pose_msg;
   tf2::toMsg(tf_position_target_stamped, pose_msg);
+
+  float temp_scale = 1;
+  pose_msg.pose.position.x = pose_msg.pose.position.x * temp_scale;
+  pose_msg.pose.position.y = pose_msg.pose.position.y * temp_scale;
+  pose_msg.pose.position.z = pose_msg.pose.position.z * temp_scale;
   pose_publisher_.publish(pose_msg);
 }
 
@@ -231,7 +237,7 @@ tf2::Transform Node::TransformFromMat (cv::Mat position_mat) {
 
 sensor_msgs::PointCloud2 Node::MapPointsToPointCloud (std::vector<ORB_SLAM2::MapPoint*> map_points) {
   if (map_points.size() == 0) {
-    std::cout << "Map point vector is empty!" << std::endl;
+    //std::cout << "Map point vector is empty!" << std::endl;
   }
 
   sensor_msgs::PointCloud2 cloud;
@@ -260,12 +266,16 @@ sensor_msgs::PointCloud2 Node::MapPointsToPointCloud (std::vector<ORB_SLAM2::Map
 
 	unsigned char *cloud_data_ptr = &(cloud.data[0]);
 
+
+  //jy added here
+  float unit_changer = 1;
+  //
   float data_array[num_channels];
   for (unsigned int i=0; i<cloud.width; i++) {
     if (map_points.at(i)->nObs >= min_observations_per_point_) {
-      data_array[0] = map_points.at(i)->GetWorldPos().at<float> (2); //x. Do the transformation by just reading at the position of z instead of x
-      data_array[1] = -1.0* map_points.at(i)->GetWorldPos().at<float> (0); //y. Do the transformation by just reading at the position of x instead of y
-      data_array[2] = -1.0* map_points.at(i)->GetWorldPos().at<float> (1); //z. Do the transformation by just reading at the position of y instead of z
+      data_array[0] = map_points.at(i)->GetWorldPos().at<float> (2) * unit_changer; //x. Do the transformation by just reading at the position of z instead of x
+      data_array[1] = -1.0* map_points.at(i)->GetWorldPos().at<float> (0) * unit_changer; //y. Do the transformation by just reading at the position of x instead of y
+      data_array[2] = -1.0* map_points.at(i)->GetWorldPos().at<float> (1) * unit_changer; //z. Do the transformation by just reading at the position of y instead of z
       //TODO dont hack the transformation but have a central conversion function for MapPointsToPointCloud and TransformFromMat
 
       memcpy(cloud_data_ptr+(i*cloud.point_step), data_array, num_channels*sizeof(float));

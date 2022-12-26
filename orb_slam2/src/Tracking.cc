@@ -267,6 +267,7 @@ void Tracking::Track()
         mpFrameDrawer->Update(this);
 
         if(mState!=OK)
+            //std::cout<<"not okay"<<std::endl;
             return;
     }
     else
@@ -581,8 +582,14 @@ void Tracking::MonocularInitialization()
         int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,100);
 
         // Check if there are enough correspondences
+
+        //jy changed here!
+        // default
+        // if(nmatches<100)
+
         if(nmatches<100)
         {
+            std::cout<<"var nmatchess is smaller than 100"<<std::endl;
             delete mpInitializer;
             mpInitializer = static_cast<Initializer*>(NULL);
             return;
@@ -670,6 +677,8 @@ void Tracking::CreateInitialMapMonocular()
     float medianDepth = pKFini->ComputeSceneMedianDepth(2);
     float invMedianDepth = 1.0f/medianDepth;
 
+    // jy changed here
+    // from 100 -> to 100
     if(medianDepth<0 || pKFcur->TrackedMapPoints(1)<100)
     {
         cout << "Wrong initialization, reseting..." << endl;
