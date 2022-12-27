@@ -160,6 +160,7 @@ void Node::PublishPositionAsTransform (cv::Mat position) {
   tf_map2target_stamped = tf2::Stamped<tf2::Transform>(tf_map2target, current_frame_time_, map_frame_id_param_);
   geometry_msgs::TransformStamped msg = tf2::toMsg(tf_map2target_stamped);
   msg.child_frame_id = target_frame_id_param_;
+  msg.header.stamp = ros::Time::now();
   // Broadcast tf
   static tf2_ros::TransformBroadcaster tf_broadcaster;
   tf_broadcaster.sendTransform(msg);
